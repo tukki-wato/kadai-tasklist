@@ -18,10 +18,12 @@ class TasksController extends Controller
                 'user' => $user,
                 'tasks' => $tasks,
             ];
+            return view('tasks.index',$data);
         }
         
         return view('welcome', $data);
     }
+   
         //
     
 
@@ -51,11 +53,12 @@ class TasksController extends Controller
             'status' => 'required|max:10',
             'content' => 'required|max:191',
         ]);
-        $request->user()->microposts()->create([
+        $request->user()->tasks()->create([
             'content' => $request->content,
+            'status' => $request->status,
         ]);
 
-        return back();
+       return redirect('/');
     }
 
     /**
@@ -66,11 +69,13 @@ class TasksController extends Controller
      */
     public function show($id)
     {
-       $task = Task::find($id);
-
-        return view('tasks.show', [
-            'task' => $task,
-        ]);
+        $task = Task::find($id);
+        if (\Auth::id() === $task->user_id) {
+            return view('tasks.show', [
+                'task' => $task,
+            ]);
+        }
+        return redirect('/');
     }
 
     /**
@@ -82,10 +87,12 @@ class TasksController extends Controller
     public function edit($id)
     {
         $task =Task::find($id);
-
-        return view('tasks.edit', [
-            'task' => $task,
-        ]);
+        if (\Auth::id() === $task->user_id) {
+            return view('tasks.edit', [
+                'task' => $task,
+            ]);
+        }
+        return redirect ('/');
     }
 
     /**
@@ -101,11 +108,14 @@ class TasksController extends Controller
             'status' => 'required|max:10',
         ]);
         $task = Task::find($id);
+        
         $task->status = $request->status;
         $task->content = $request->content;
-        $task->save();
-
+        if (\Auth::id() === $task->user_id) {
+            $task->save();
+        }
         return redirect('/');
+        
     }
 
     /**
@@ -121,6 +131,6 @@ class TasksController extends Controller
             $task->delete();
         }
 
-        return back();
+         return redirect('/');
     }
 }
